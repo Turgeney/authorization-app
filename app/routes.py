@@ -25,5 +25,6 @@ async def login(user: User):
 
 @router.get("/protected")
 async def secure_data(token: str = Depends(oauth2_scheme)):
+     print(token)
      decode_access_token(token)
-     return {"message": "This is secure data"}
+     return {"message": "Access Granted!"}
