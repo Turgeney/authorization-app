@@ -1,9 +1,8 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from starlette.requests import Request
 
-
-
+from app.database import engine, AuthDB
+from app.models import User
 from app.routes import router as APIRouter
 import pytz
 
@@ -15,7 +14,4 @@ app.include_router(APIRouter)
 # Монтирование директории со статичными файлами
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-
-# Используем зависимость OAuth2, но без полной реализации OAuth2
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
+AuthDB.metadata.create_all(bind=engine)

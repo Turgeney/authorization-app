@@ -1,9 +1,8 @@
 # операции с jwt
-from fastapi.security import OAuth2PasswordBearer
 import jwt
 from datetime import datetime, timedelta
 from app.constants import *
-from main import *
+from app.main import *
 from typing import Optional
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
