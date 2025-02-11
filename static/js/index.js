@@ -1,5 +1,6 @@
 // URL-адрес API сервера
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "http://127.0.0.1:8000";
+
 
 // Функция для регистрации пользователя
 async function register(username, password) {
@@ -26,7 +27,7 @@ async function register(username, password) {
 // Функция для получения токена
 async function getToken(username, password) {
     try {
-        const response = await fetch(`${API_BASE_URL}/token`, {
+        const response = await fetch(`${API_BASE_URL}/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -52,7 +53,7 @@ async function getToken(username, password) {
 // Функция для доступа к защищенному ресурсу
 async function accessProtectedResource(token) {
     try {
-        const response = await fetch(`${API_BASE_URL}/data`, {
+        const response = await fetch(`${API_BASE_URL}/check_access`, {
             method: "GET",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -70,20 +71,3 @@ async function accessProtectedResource(token) {
         console.error("Ошибка:", error);
     }
 }
-
-// Основной пример работы приложения
-(async function main() {
-    const username = "testuser";
-    const password = "password123";
-
-    // Регистрация пользователя
-    await register(username, password);
-
-    // Получение токена
-    const token = await getToken(username, password);
-
-    // Доступ к защищенному ресурсу
-    if (token) {
-        await accessProtectedResource(token);
-    }
-})();

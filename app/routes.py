@@ -1,37 +1,58 @@
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import HTMLResponse
+#entry-points, методы rest api
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from app.jwt_functions import *
-from app.models import User, Token
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer#, OAuth2PasswordRequestForm
 
+from sqlalchemy.orm import Session
+
+from app.models import RequestUser, User, ResponseToken
+from app.databases import get_AuthDB
+from app.constants import TEMPLATE_DIR
+from app.utils import hash_create, hash_check, create_access_token, decode_access_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 router = APIRouter()
 
 # Указание директории с шаблонами HTML
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=TEMPLATE_DIR)
 
-#Основная страница
 @router.get("/", response_class=HTMLResponse)
 async def get(request: Request):
-    # тест Jinja2 template engine
+    """Основная страница"""
     return templates.TemplateResponse("index.html", {"request": request})
 
-@router.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    # Пример проверки логина и пароля
-    if form_data.username != "test" or form_data.password != "test":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-        )
-    # Генерация JWT (здесь необходимо заменить secret и алгоритм на ваши собственные)
-    access_token = jwt.encode({"sub": form_data.username}, "secret", algorithm="HS256")
-    return {"access_token": access_token, "token_type": "bearer"}
+@router.post("/register", response_model=RequestUser)
+def register_user(incoming_user: RequestUser, AuthDB: Session = Depends(get_AuthDB)):
+    """Регистрация нового пользователя"""
+    exist_user = AuthDB.query(User).filter(User.username == incoming_user.username).first()
+    if exist_user:
+        raise HTTPException(status_code=400, detail="Такой пользователь уже существует")
+    hashed_password = hash_create(incoming_user.password)
+    new_user = User(username=incoming_user.username, hashed_password=hashed_password)
+    AuthDB.add(new_user)
+    AuthDB.commit()
+    AuthDB.refresh(new_user)
+    return JSONResponse(content={"message": "Пользователь успешно зарегистрирован."}, status_code=201)
 
-@router.get("/data")
+@router.post("/login", response_model=ResponseToken)
+def login(incoming_user: RequestUser, AuthDB: Session = Depends(get_AuthDB)):
+    """Вход существующео пользователя
+    должны передаваться username и password 
+    """
+    exist_user = AuthDB.query(User).filter(User.username == incoming_user.username).first()
+    if not exist_user:
+        raise HTTPException(status_code=401, detail="Неверные имя пользователя или пароль")
+    check_result = hash_check(subj_password = incoming_user.password, hashed_password = exist_user.hashed_password)
+    if not check_result:
+        raise HTTPException(status_code=401, detail="Неверные имя пользователя или пароль")
+    access_token = create_access_token({"subj":exist_user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+    
+@router.get("/check_access")
 async def secure_data(token: str = Depends(oauth2_scheme)):
-     print(token)
+     """Проверка прав доступа и jwt
+     должен передаваться jwt
+     """
      decode_access_token(token)
      return {"message": "Access Granted!"}  

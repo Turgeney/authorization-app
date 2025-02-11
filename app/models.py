@@ -1,22 +1,25 @@
+#модели, классы
 from pydantic import BaseModel
-from app.main import *
-from app.database import AuthDB
 from sqlalchemy import Column, Integer, String
 
+from app.main import *
+from app.databases import AuthDB
 
 class User(AuthDB):
+    """Модель пользователя в бд
+    """
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
 
 
-class UserCreate(BaseModel):
+class RequestUser(BaseModel):
+    """класс пользователя для входящих данных"""
     username: str
     password: str
 
-
-class Token(BaseModel):
-    """Модель для ответа"""
+class ResponseToken(BaseModel):
+    """класс jwt токена для исходящих данных"""
     access_token: str
     token_type: str

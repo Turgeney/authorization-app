@@ -19,7 +19,8 @@ dependencies = [
     "httpx (>=0.28.1,<0.29.0)",
     "python-multipart (>=0.0.20,<0.0.21)",
     "sqlalchemy (>=2.0.38,<3.0.0)",
-    "databases (>=0.9.0,<0.10.0)"
+    "databases (>=0.9.0,<0.10.0)",
+    "passlib (>=1.7.4,<2.0.0)"
 ]
 
 
