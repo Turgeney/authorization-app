@@ -1,73 +1,53 @@
-// URL-адрес API сервера
-const API_BASE_URL = "http://127.0.0.1:8000";
 
+async function registerUser() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
 
-// Функция для регистрации пользователя
-async function register(username, password) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/register`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username, password }),
-        });
+    const response = await fetch("/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
+    });
 
-        if (response.ok) {
-            console.log("Пользователь успешно зарегистрирован.");
-        } else {
-            const errorData = await response.json();
-            console.error("Ошибка регистрации:", errorData.detail);
-        }
-    } catch (error) {
-        console.error("Ошибка:", error);
+    const result = await response.json();
+    const registerResult = document.getElementById("result");
+    registerResult.textContent = response.ok ? result.message : result.detail;
+}
+
+async function loginUser() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    const response = await fetch("/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
+    });
+
+    const result = await response.json();
+    const loginResult = document.getElementById("result");
+    loginResult.textContent = response.ok ? "Успешный вход! Получен токен:\n" + result.access_token : result.detail;
+    if (response.ok) {
+        localStorage.setItem("token", result.access_token);
     }
 }
 
-// Функция для получения токена
-async function getToken(username, password) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username, password }),
-        });
+async function checkAccess() {
+    const token = localStorage.getItem("token");
 
-        if (response.ok) {
-            const data = await response.json();
-            console.log("Токен:", data.access_token);
-            return data.access_token; // Возвращаем токен
-        } else {
-            const errorData = await response.json();
-            console.error("Ошибка получения токена:", errorData.detail);
-            return null;
+    const response = await fetch("/check_access", {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`
         }
-    } catch (error) {
-        console.error("Ошибка:", error);
-        return null;
-    }
+    });
+
+    const result = await response.json();
+    const accessResult = document.getElementById("result");
+    accessResult.textContent = response.ok ? "Доступ разрешён! Payload: \n" + JSON.stringify(result.payload) : "Доступ запрещён";
 }
 
-// Функция для доступа к защищенному ресурсу
-async function accessProtectedResource(token) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/check_access`, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-            },
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            console.log("Данные защищенного ресурса:", data);
-        } else {
-            const errorData = await response.json();
-            console.error("Ошибка доступа:", errorData.detail);
-        }
-    } catch (error) {
-        console.error("Ошибка:", error);
-    }
-}

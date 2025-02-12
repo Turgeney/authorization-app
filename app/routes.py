@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.models import RequestUser, User, ResponseToken
 from app.databases import get_AuthDB
-from app.constants import TEMPLATE_DIR
+from app.settings import TEMPLATE_DIR
 from app.utils import hash_create, hash_check, create_access_token, decode_access_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -18,13 +18,15 @@ router = APIRouter()
 templates = Jinja2Templates(directory=TEMPLATE_DIR)
 
 @router.get("/", response_class=HTMLResponse)
-async def get(request: Request):
+async def main_page(request: Request):
     """Основная страница"""
     return templates.TemplateResponse("index.html", {"request": request})
 
 @router.post("/register", response_model=RequestUser)
 def register_user(incoming_user: RequestUser, AuthDB: Session = Depends(get_AuthDB)):
-    """Регистрация нового пользователя"""
+    """Регистрация нового пользователя
+    должны передаваться username и password
+    """
     exist_user = AuthDB.query(User).filter(User.username == incoming_user.username).first()
     if exist_user:
         raise HTTPException(status_code=400, detail="Такой пользователь уже существует")
@@ -38,7 +40,8 @@ def register_user(incoming_user: RequestUser, AuthDB: Session = Depends(get_Auth
 @router.post("/login", response_model=ResponseToken)
 def login(incoming_user: RequestUser, AuthDB: Session = Depends(get_AuthDB)):
     """Вход существующео пользователя
-    должны передаваться username и password 
+    должны передаваться username и password
+    возвращает access_token и token_type: bearer
     """
     exist_user = AuthDB.query(User).filter(User.username == incoming_user.username).first()
     if not exist_user:
@@ -50,9 +53,9 @@ def login(incoming_user: RequestUser, AuthDB: Session = Depends(get_AuthDB)):
     return {"access_token": access_token, "token_type": "bearer"}
     
 @router.get("/check_access")
-async def secure_data(token: str = Depends(oauth2_scheme)):
+async def check_access(token: str = Depends(oauth2_scheme)):
      """Проверка прав доступа и jwt
      должен передаваться jwt
      """
-     decode_access_token(token)
-     return {"message": "Access Granted!"}  
+     payload = decode_access_token(token)
+     return JSONResponse(content={"payload": payload}, status_code=201)

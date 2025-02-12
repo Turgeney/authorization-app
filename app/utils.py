@@ -7,7 +7,7 @@ import jwt
 from passlib.context import CryptContext
 import bcrypt
 
-from app.constants import LOCAL_TIMEZONE, SECRET_KEY
+from app.settings import LOCAL_TIMEZONE, SECRET_KEY
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

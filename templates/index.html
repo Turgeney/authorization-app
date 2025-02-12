@@ -2,8 +2,9 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>FastAPI Client</title>
+    <title>Сервис авторизации</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <style>
         body { font-family: Arial, sans-serif; }
         .container { max-width: 600px; margin: 50px auto; }
@@ -29,10 +30,13 @@
             <input type="password" id="password">
         </div>
 
-        <button id="registerButton">Регистрация</button>
-        <button id="getTokenButton" disabled>Получить токен</button>
-        <button id="accessProtectedButton" disabled>Доступ к защищенному ресурсу</button>
+        <button onclick="registerUser()">Регистрация</button>
+        <button onclick="loginUser()">Получить токен</button>
+        <button onclick="checkAccess()">Доступ к защищенному ресурсу</button>
+        <p id="result"></p>
 
         <div class="log" id="log"></div>
         <script src="/static/js/index.js"></script>
     </div>
+</body>
+</html>
